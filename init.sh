@@ -1,4 +1,3 @@
-```bash
 #!/usr/bin/env bash
 
 set -euo pipefail
@@ -39,4 +38,3 @@ echo "==> Initialization complete"
 echo "    Verification: ./gradlew build lint"
 echo "    Install:       RUN_START_COMMAND=1 ./init.sh"
 echo "    Clean build:   ./gradlew clean build"
-```

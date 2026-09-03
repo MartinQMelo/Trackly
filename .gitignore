@@ -1,0 +1,30 @@
+# Android build outputs
+*.iml
+*.hprof
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+/build/
+/app/build/
+app/release/
+
+# Compiled files
+*.class
+
+# Log files
+*.log
+
+# Lint HTML reports
+/app/build/reports/
+
+# Keystore files (do not commit signing keys)
+*.jks
+*.keystore
+
+# External native build
+.externalNativeBuild/
+.cxx/
+
+# Google services
+google-services.json
