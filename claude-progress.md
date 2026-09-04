@@ -47,7 +47,6 @@
   ./gradlew build lint
   ```
 * Verification results: **BUILD SUCCESSFUL** — 95 actionable tasks, lint passed (no errors), debug APK produced at `app/build/outputs/apk/debug/app-debug.apk`
-* Device tested: Not yet — requires physical device with Android API 26+
 * Evidence:
   * `./gradlew build lint` exit code 0
   * `app-debug.apk` — 6.3 MB
@@ -58,6 +57,72 @@
   * `init.sh` (fixed markdown code fences)
   * All Android project files (new)
 
+---
+
+### Session 002
+
+* Date: 2026-09-04
+* Goal: Record `app-001` device verification; implement `service-001` — Implement NotificationListenerService Pipeline
+* Active feature: `service-001`
+
+#### app-001 Device Verification (closing)
+
+* Device: Poco X7 Pro
+* Android version: Not recorded (user-reported)
+* Steps performed:
+  1. debug APK installed on device
+  2. Notification Access manually granted through Android settings
+  3. App returned to without crashing
+* Outcome: All `app-001` verification criteria satisfied.
+* `app-001` status: **passing**
+
+#### service-001 — What was built
+
+* `MusicNotificationService.kt` — replaced skeleton with full media notification filtering:
+  * `onNotificationPosted` / `onNotificationRemoved` — null-safe, routes filtered events to `MediaPipelineCoordinator`
+  * `isMediaNotification()` — classification logic:
+    * `CATEGORY_TRANSPORT` → always pass (explicit media transport control)
+    * `CATEGORY_SERVICE` + `android.mediaSession` extras key present → pass (e.g. Spotify service notifications with MediaSession)
+    * All other categories (MESSAGE, EMAIL, SOCIAL, …) → reject; logged as ignored
+  * Non-media packages (WhatsApp, Gmail, etc.) are silently discarded; only a `Log.v` is emitted.
+
+* `MediaPipelineCoordinator.kt` — new class; entry point for downstream pipeline stages:
+  * `onMediaNotificationPosted(sbn)` — logs event, contains TODO markers for media-001 (MediaSession extraction), data-002 (dedup), data-001 (Room persistence)
+  * `onMediaNotificationRemoved(sbn)` — logs event, TODO for media-001 STOPPED state handling
+
+#### Automated verification
+
+```
+./gradlew build lint
+```
+
+Result: **BUILD SUCCESSFUL** — 95 actionable tasks, 23 executed, lint passed (no errors)
+Exit code: 0
+
+#### Device verification (pending)
+
+Install the updated APK on the Poco X7 Pro and verify via logcat:
+
+```
+adb logcat -s MusicNotificationSvc:V MediaPipelineCoord:D
+```
+
+Expected behavior:
+1. Play a track in a media app (e.g. Spotify, YouTube Music) → logcat shows:
+   - `MusicNotificationSvc: Media notification posted from <pkg>`
+   - `MediaPipelineCoord: Pipeline entry — posted: pkg=<pkg> key=<key>`
+2. Receive a WhatsApp or Gmail notification → logcat shows:
+   - `MusicNotificationSvc: Ignored non-media notification from <pkg>`
+   - No `MediaPipelineCoord` entry logged.
+3. Repeated notification updates from media player → logcat shows repeated pipeline entries (dedup not yet active; that's data-002).
+
+* Commits: `service-001/notification-listener-pipeline`
+* Files updated:
+  * `claude-progress.md`
+  * `feature_list.json`
+  * `app/src/main/java/com/martinq/trackly/service/MusicNotificationService.kt`
+  * `app/src/main/java/com/martinq/trackly/service/MediaPipelineCoordinator.kt` (new)
+
 ## Known Risks
 
 * Media metadata varies between players and Android versions.
@@ -67,13 +132,16 @@
 * Notification Access requires manual user approval.
 * OEM battery optimization may affect background services.
 * Host Java 25 — if a future toolchain issue arises, install Java 17 JDK for toolchain resolution.
+* Some media apps (e.g. Spotify) use `CATEGORY_SERVICE`; the MediaSession extras key heuristic may not cover all players — revisit in media-001 if gaps are found.
 
 ## Unresolved Issues
 
-* Device testing for `app-001` not yet performed (requires physical device).
-* `app-001` is partially passing (automated verification done; device verification pending).
+* `service-001` device verification not yet performed (requires updated APK on Poco X7 Pro and logcat observation).
+* `service-001` is partially passing (automated verification done; device verification pending).
 
 ## Next Best Step
 
-* Perform device testing for `app-001` (install APK, grant Notification Access, verify no crash on return).
-* If device not available: proceed to `service-001` — Implement NotificationListenerService Pipeline.
+* Install the updated APK (`RUN_START_COMMAND=1 ./init.sh`) on the Poco X7 Pro.
+* Use logcat to verify media notifications are captured and non-media notifications are ignored.
+* Record results and mark `service-001` as passing (or document gaps).
+* Proceed to `media-001` — Extract Media Metadata via MediaSession.

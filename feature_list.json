@@ -1,6 +1,6 @@
 {
   "project": "music-notification-tracker",
-  "last_updated": "2026-09-03",
+  "last_updated": "2026-09-04",
   "rules": {
     "single_active_feature": true,
     "passing_requires_evidence": true,
@@ -20,7 +20,7 @@
       "area": "core",
       "title": "Setup Android Project & Permissions",
       "user_visible_behavior": "The app installs successfully and provides a minimal UI that opens Android Notification Access settings.",
-      "status": "in_progress",
+      "status": "passing",
       "verification": [
         "Run `./gradlew build lint` successfully.",
         "Install the debug APK on an Android device.",
@@ -31,9 +31,11 @@
       "evidence": [
         "2026-09-03: `./gradlew build lint` BUILD SUCCESSFUL — 95 tasks, lint passed (no errors).",
         "2026-09-03: debug APK produced: app/build/outputs/apk/debug/app-debug.apk (6.3 MB).",
-        "2026-09-03: Device verification pending."
+        "2026-09-04: APK installed on Poco X7 Pro (physical device).",
+        "2026-09-04: Notification Access manually granted through Android settings.",
+        "2026-09-04: App returned without crashing. All verification criteria satisfied."
       ],
-      "notes": "Notification Access must be granted manually. Automated verification passed. Device testing required to reach passing status."
+      "notes": "All automated and device verification complete. Passing."
     },
     {
       "id": "service-001",
@@ -41,7 +43,7 @@
       "area": "background",
       "title": "Implement NotificationListenerService Pipeline",
       "user_visible_behavior": "The app observes notification events in the background and ignores unrelated notifications.",
-      "status": "not_started",
+      "status": "in_progress",
       "verification": [
         "Create `MusicNotificationService` extending `NotificationListenerService`.",
         "Declare the service correctly in the manifest.",
@@ -49,8 +51,13 @@
         "Verify a supported media-player notification triggers the media evaluation pipeline.",
         "Verify repeated notification updates do not directly create duplicate records."
       ],
-      "evidence": [],
-      "notes": "Media metadata extraction belongs to `media-001`."
+      "evidence": [
+        "2026-09-04: `MusicNotificationService` implemented with media notification filtering (CATEGORY_TRANSPORT + CATEGORY_SERVICE+MediaSession).",
+        "2026-09-04: `MediaPipelineCoordinator` created as the handoff point downstream of the NLS layer.",
+        "2026-09-04: `./gradlew build lint` BUILD SUCCESSFUL — 95 tasks, 23 executed, lint passed (no errors).",
+        "2026-09-04: Device verification pending (install new APK, trigger media and non-media notifications, observe logcat)."
+      ],
+      "notes": "Automated verification passed. Device testing required: install updated APK, use logcat to confirm CATEGORY_TRANSPORT notifications are logged as pipeline entries and WhatsApp/Gmail notifications are logged as ignored."
     },
     {
       "id": "media-001",
